@@ -1,0 +1,26 @@
+<%- if User.current.allowed_to?(:edit_sprint_board, project) and pbi.editable? -%>
+  <%- context_menu_id = "pbi_#{pbi.id}_context_menu"
+      new_subtask_link_class = "pbi_#{pbi.id}_new_subtask" -%>
+  <div id="<%= context_menu_id %>" class="scrum-custom-menu">
+    <%- close_context_menu_pbi_id = "close_context_menu_pbi_#{pbi.id}" -%>
+    <%= link_to "", "#", :class => "close-icon contextual", :id => close_context_menu_pbi_id %>
+
+    <fieldset>
+      <legend><%= l(:label_create_subtask) %></legend>
+      <%- Tracker.task_trackers.each do |tracker| -%>
+        <label>
+          <%= link_to tracker.name, new_task_path(pbi, tracker),
+                      :remote => true, :method => "GET", :class => "icon icon-add #{new_subtask_link_class}" %>
+        </label><br/>
+      <%- end -%>
+    </fieldset>
+  </div>
+
+  <%= render :partial => "post_its/sprint_board/pbi_context_menu", :formats => [:js],
+             :locals => {:project => project,
+                         :pbi => pbi,
+                         :pbi_id => pbi_id,
+                         :context_menu_id => context_menu_id,
+                         :close_context_menu_pbi_id => close_context_menu_pbi_id,
+                         :new_subtask_link_class => new_subtask_link_class} %>
+<%- end -%>

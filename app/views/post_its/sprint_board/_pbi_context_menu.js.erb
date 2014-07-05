@@ -1,0 +1,25 @@
+<%- if User.current.allowed_to?(:edit_sprint_board, project) and pbi.editable? -%>
+	<%= javascript_tag do %>
+		var pbi_context_menu_function = function(event) {
+			$(".scrum-custom-menu").hide();
+			event.preventDefault();
+			var maxX = $(document).width() - $("#<%= context_menu_id %>").width() - 10;
+			var maxY = $(document).height() - $("#<%= context_menu_id %>").height() - 10;
+			var x = (event.pageX > maxX) ? maxX : event.pageX;
+			var y = (event.pageY > maxY) ? maxY : event.pageY;
+			$("#<%= context_menu_id %>").css({
+				left: x + "px",
+				top: y + "px"
+			});
+			$("#<%= context_menu_id %>").show();
+		};
+		$("#<%= pbi_id %>").dblclick(pbi_context_menu_function);
+		$("#<%= pbi_id %>").contextmenu(pbi_context_menu_function);
+		$("#<%= close_context_menu_pbi_id %>").click(function(event) {
+			$(".scrum-custom-menu").hide();
+		});
+		$(".<%= new_subtask_link_class %>").click(function(event) {
+			$(".scrum-custom-menu").hide();
+		});
+	<% end %>
+<%- end -%>

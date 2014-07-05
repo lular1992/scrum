@@ -1,0 +1,97 @@
+<%- defaults = Redmine::Plugin::registered_plugins[:scrum].settings[:default] -%>
+
+<fieldset>
+  <legend><%= l(:label_settings) %></legend>
+  <p>
+    <label><%= l(:label_setting_story_points_custom_field) %>:</label>
+    <%- custom_fields = CustomField.find_all_by_type_and_field_format("IssueCustomField", ["int", "float", "string", "list"])
+        custom_fields = custom_fields.collect{|c| [c.name, c.id]}
+        options = options_for_select(custom_fields, Scrum::Setting.story_points_custom_field_id) -%>
+    <%= select_tag "settings[story_points_custom_field_id]", options, :include_blank => true %>
+  </p>
+  <p>
+    <label><%= l(:label_setting_task_statuses) %>:</label>
+    <%- statuses = IssueStatus.all.collect{|s| [s.name, s.id]} -%>
+    <%- options = options_for_select(statuses, Scrum::Setting.task_status_ids) -%>
+    <%= select_tag "settings[task_status_ids]", options, :multiple => true %>
+  </p>
+  <p>
+    <label><%= l(:label_setting_verification_activities) %>:</label>
+    <%- activities = Enumeration.all(:conditions => {:type => "TimeEntryActivity"}).collect{|s| [s.name, s.id]} -%>
+    <%- options = options_for_select(activities, Scrum::Setting.verification_activity_ids) -%>
+    <%= select_tag "settings[verification_activity_ids]", options, :multiple => true %>
+  </p>
+  <p>
+    <label><%= l(:label_setting_create_journal_on_pbi_position_change) %>:</label>
+    <%= hidden_field_tag("settings[create_journal_on_pbi_position_change]", 0) %>
+    <%= check_box_tag("settings[create_journal_on_pbi_position_change]", 1,
+                      Scrum::Setting.create_journal_on_pbi_position_change) %>
+  </p>
+  <p>
+    <label><%= l(:label_setting_inherit_pbi_attributes) %>:</label>
+    <%= hidden_field_tag("settings[inherit_pbi_attributes]", 0) %>
+    <%= check_box_tag("settings[inherit_pbi_attributes]", 1,
+                      Scrum::Setting.inherit_pbi_attributes) %>
+  </p>
+</fieldset>
+
+<fieldset>
+  <legend><%= l(:label_tracker_plural) %></legend>
+  <%- trackers = Tracker.all.collect{|t| [t.name, t.id]} -%>
+  <p>
+    <label><%= l(:label_pbi_plural) %>:</label>
+    <%- options = options_for_select(trackers, Scrum::Setting.pbi_tracker_ids) -%>
+    <%= select_tag "settings[pbi_tracker_ids]", options, :multiple => true %>
+  </p>
+  <p>
+    <label><%= l(:label_task_plural) %>:</label>
+    <%- options = options_for_select(trackers, Scrum::Setting.task_tracker_ids) -%>
+    <%= select_tag "settings[task_tracker_ids]", options, :multiple => true %>
+  </p>
+  <%- Tracker.all.each do |tracker| -%>
+    <p>
+      <label><%= l(:label_setting_fields_on_tracker, :tracker => tracker.name) %></label>
+      <%- fields = tracker.core_fields.collect{|f| [l("field_#{f}".sub(/_id$/, "")), f]}
+          options = options_for_select(fields, Scrum::Setting.tracker_fields(tracker.id)) -%>
+      <%= select_tag "settings[tracker_#{tracker.id}_fields]", options, :multiple => true %>
+      <%- custom_fields = tracker.custom_fields.collect{|f| [f.name, f.id]}
+          options = options_for_select(custom_fields, Scrum::Setting.tracker_custom_fields(tracker.id)) -%>
+      <%= select_tag "settings[tracker_#{tracker.id}_custom_fields]", options, :multiple => true %>
+    </p>
+  <%- end -%>
+</fieldset>
+
+<fieldset>
+  <legend><%= l(:label_post_it) %></legend>
+  <%- colors = {1 => "post-it-color-1", 2 => "post-it-color-2", 3 => "post-it-color-3",
+                4 => "post-it-color-4", 5 => "post-it-color-5", 6 => "post-it-color-6"}
+      Tracker.all.each do |tracker| -%>
+    <p>
+      <label><%= tracker.name %>:</label>
+      <%- colors.each_pair do |color_id, color_css_class| -%>
+        <%- setting_name = "tracker_#{tracker.id}_color".to_sym
+            selected = (@settings[setting_name].nil? and (color_id == 1)) ? true : (@settings[setting_name] == color_css_class) -%>
+        <%= radio_button_tag("settings[#{setting_name}]", color_css_class, selected) %>
+        <span class="post-it settings-post-it <%= color_css_class %>">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+      <%- end -%>
+    </p>
+  <%- end -%>
+  <p>
+    <label><%= l(:label_doer) %>:</label>
+    <%- colors.each_pair do |color_id, color_css_class| -%>
+      <%- selected = (color_css_class == Scrum::Setting.doer_color) -%>
+      <%= radio_button_tag("settings[doer_color]", color_css_class, selected) %>
+      <span class="post-it settings-post-it <%= color_css_class %>">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <%- end -%>
+  </p>
+  <p>
+    <label><%= l(:label_reviewer) %>:</label>
+    <%- colors.each_pair do |color_id, color_css_class| -%>
+      <%- selected = (color_css_class == Scrum::Setting.reviewer_color) -%>
+      <%= radio_button_tag("settings[reviewer_color]", color_css_class, selected) %>
+      <span class="post-it settings-post-it <%= color_css_class %>">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <%- end -%>
+  </p>
+</fieldset>
+
+<%= render :partial => "common/scrum_footer" %>
